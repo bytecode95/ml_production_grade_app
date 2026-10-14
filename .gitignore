@@ -1,0 +1,262 @@
+# ============================================================
+# Python
+# ============================================================
+
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+*.pyd
+
+# Python build / packaging
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Test / coverage
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+.cache/
+
+# Type checkers / linters
+.mypy_cache/
+.pyright/
+.ruff_cache/
+.pyre/
+.pytype/
+
+# ============================================================
+# Virtual Environments
+# ============================================================
+
+.venv/
+venv/
+env/
+ENV/
+.env/
+.env.*
+
+# Keep example environment files
+!.env.example
+
+# ============================================================
+# uv
+# ============================================================
+
+# uv cache
+.uv/
+
+# IMPORTANT:
+# Keep these files in Git:
+# pyproject.toml
+# uv.lock
+# .python-version
+
+# ============================================================
+# Environment / Secrets
+# ============================================================
+
+.env
+.env.*
+!.env.example
+
+*.pem
+*.key
+*.crt
+secrets/
+credentials/
+*.secret
+*.secrets
+
+# ============================================================
+# ZenML
+# ============================================================
+
+# Local ZenML state / databases
+.zen/
+zenml/
+zenml_config/
+zenml_local/
+zenml_data/
+
+# ZenML local stores
+local_stores/
+
+# ============================================================
+# MLflow
+# ============================================================
+
+# Local MLflow tracking data
+mlruns/
+
+# MLflow local artifacts
+mlartifacts/
+
+# MLflow model registry / local tracking files
+mlflow.db
+mlflow.db-shm
+mlflow.db-wal
+
+# ============================================================
+# ML / Model Artifacts
+# ============================================================
+
+# Trained models
+models/
+model/
+artifacts/
+outputs/
+
+# Serialized ML models
+*.pkl
+*.pickle
+*.joblib
+*.onnx
+*.pt
+*.pth
+*.h5
+*.keras
+
+# Model checkpoints
+checkpoints/
+*.ckpt
+
+# ============================================================
+# Data
+# ============================================================
+
+# Generated / extracted datasets
+extracted_data/
+
+# Raw data
+# Uncomment if your datasets should NOT be committed to Git
+# data/raw/
+# data/external/
+
+# Generated datasets
+data/processed/
+data/interim/
+data/output/
+
+# Large dataset formats
+*.parquet
+*.feather
+
+# ============================================================
+# Logs
+# ============================================================
+
+logs/
+*.log
+
+# ============================================================
+# Jupyter Notebook
+# ============================================================
+
+.ipynb_checkpoints/
+
+# Jupyter temporary files
+*.ipynb_checkpoints
+
+# ============================================================
+# Analysis / Generated Reports
+# ============================================================
+
+# Uncomment these if analysis contains generated files
+# analysis/output/
+# analysis/reports/
+
+# ============================================================
+# OS
+# ============================================================
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+Desktop.ini
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Linux
+*~
+
+# ============================================================
+# IDEs / Editors
+# ============================================================
+
+# VS Code
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# JetBrains
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Visual Studio
+.vs/
+
+# ============================================================
+# Temporary files
+# ============================================================
+
+*.tmp
+*.temp
+*.swp
+*.swo
+*.bak
+*.orig
+*.rej
+
+# ============================================================
+# Profiling / Debugging
+# ============================================================
+
+.prof
+*.prof
+.pyinstrument/
+
+# ============================================================
+# Local development
+# ============================================================
+
+*.local
+*.local.*
+
+# ============================================================
+# Generated documentation
+# ============================================================
+
+# Uncomment if docs are generated automatically
+# docs/_build/
+# docs/site/
+
+# ============================================================
+# Experiment / Training outputs
+# ============================================================
+
+runs/
+experiments/
+predictions/
+evaluation_results/
+
+# TensorBoard
+runs/
+tensorboard/
