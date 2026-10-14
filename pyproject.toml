@@ -1,0 +1,40 @@
+[project]
+name = "ml-production-grade-app"
+version = "0.1.0"
+description = "Production-oriented price prediction ML application"
+readme = "README.md"
+authors = [
+    { name = "cheth@714", email = "chethana.virajini@aventagelabs.com" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.143.0",
+    "joblib>=1.6.0",
+    "numpy>=2.5.4",
+    "pandas>=3.0.6",
+    "pydantic>=2.14.1",
+    "pydantic-settings>=2.15.0",
+    "pyyaml>=6.0.3",
+    "scikit-learn>=1.9.1",
+    "uvicorn[standard]>=0.54.0",
+]
+
+[project.scripts]
+price-prediction = "price_prediction.cli:main"
+
+[build-system]
+requires = ["uv_build>=0.12.5,<0.13.0"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-name = "price_prediction"
+module-root = "src"
+
+[dependency-groups]
+dev = [
+    "httpx>=0.28.1",
+    "mypy>=2.4.0",
+    "pytest>=9.1.1",
+    "pytest-cov>=7.1.0",
+    "ruff>=0.17.0",
+]
