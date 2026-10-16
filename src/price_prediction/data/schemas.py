@@ -18,6 +18,7 @@ Series declares the expected type of each DataFrame column.
 """
 
 """
+A Pandera schema is a set of rules that defines what your Pandas DataFrame should look like and what data it is allowed to contain.
 Definition	What it enforces
 SalePrice: Series[float]	Target should be numeric.
 gt=0	                    Value must be greater than zero.
