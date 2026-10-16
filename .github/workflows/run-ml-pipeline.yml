@@ -1,0 +1,38 @@
+name: Run SageMaker ML Pipeline
+on:
+  workflow_dispatch:
+    inputs:
+      training_data_uri:
+        description: S3 URI of validated CSV with SalePrice target
+        required: true
+        type: string
+      minimum_r2:
+        description: Minimum R2 quality gate
+        required: true
+        default: "0.50"
+        type: string
+permissions:
+  contents: read
+  id-token: write
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv python install 3.12
+      - run: uv sync --all-groups
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+      - name: Upsert and start pipeline
+        env:
+          AWS_REGION: ${{ vars.AWS_REGION }}
+          SAGEMAKER_EXECUTION_ROLE_ARN: ${{ vars.SAGEMAKER_EXECUTION_ROLE_ARN }}
+          SAGEMAKER_PIPELINE_BUCKET: ${{ vars.SAGEMAKER_PIPELINE_BUCKET }}
+          SAGEMAKER_PIPELINE_NAME: ${{ vars.SAGEMAKER_PIPELINE_NAME }}
+        run: |
+          uv run python pipelines/sagemaker/pipeline.py --start \
+            --training-data-uri "${{ inputs.training_data_uri }}" \
+            --minimum-r2 "${{ inputs.minimum_r2 }}"

@@ -1,0 +1,66 @@
+name: Deploy API to ECS
+on:
+  push:
+    branches: [main]
+    paths:
+      - "src/**"
+      - "pyproject.toml"
+      - "uv.lock"
+      - "Dockerfile"
+      - "scripts/container-entrypoint.sh"
+      - ".github/workflows/deploy-api.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+  id-token: write
+concurrency:
+  group: deploy-api-production
+  cancel-in-progress: false
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+      - uses: aws-actions/amazon-ecr-login@v2
+        id: ecr
+      - name: Build and push
+        env:
+          REGISTRY: ${{ steps.ecr.outputs.registry }}
+          REPOSITORY: ${{ vars.ECR_REPOSITORY }}
+          SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          IMAGE="$REGISTRY/$REPOSITORY:$SHA"
+          docker build --pull -t "$IMAGE" .
+          docker push "$IMAGE"
+          echo "IMAGE=$IMAGE" >> "$GITHUB_ENV"
+      - name: Register task definition and deploy
+        env:
+          CLUSTER: ${{ vars.ECS_CLUSTER }}
+          SERVICE: ${{ vars.ECS_SERVICE }}
+          CONTAINER_NAME: ${{ vars.ECS_CONTAINER_NAME || 'api' }}
+        run: |
+          set -euo pipefail
+          ARN=$(aws ecs describe-services --cluster "$CLUSTER" --services "$SERVICE" --query 'services[0].taskDefinition' --output text)
+          aws ecs describe-task-definition --task-definition "$ARN" --query taskDefinition > task.json
+          python - <<'PY'
+          import json, os
+          p = "task.json"
+          d = json.load(open(p, encoding="utf-8"))
+          for k in ("taskDefinitionArn", "revision", "status", "requiresAttributes", "compatibilities", "registeredAt", "registeredBy"):
+              d.pop(k, None)
+          matches = [c for c in d["containerDefinitions"] if c["name"] == os.environ["CONTAINER_NAME"]]
+          if len(matches) != 1:
+              raise SystemExit("Configured ECS container name was not found uniquely.")
+          matches[0]["image"] = os.environ["IMAGE"]
+          json.dump(d, open("task-register.json", "w", encoding="utf-8"))
+          PY
+          NEW_ARN=$(aws ecs register-task-definition --cli-input-json file://task-register.json --query 'taskDefinition.taskDefinitionArn' --output text)
+          aws ecs update-service --cluster "$CLUSTER" --service "$SERVICE" --task-definition "$NEW_ARN" >/dev/null
+          aws ecs wait services-stable --cluster "$CLUSTER" --services "$SERVICE"
+      - run: echo "Deployed $IMAGE"
