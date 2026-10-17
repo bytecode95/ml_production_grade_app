@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import AsyncIterator
 
 from fastapi import FastAPI
-
+from fastapi.middleware.cors import CORSMiddleware
 from price_prediction.api.exceptions import register_exception_handlers
 from price_prediction.api.routes.health import router as health_router
 from price_prediction.api.routes.model_info import router as model_info_router
@@ -57,6 +57,17 @@ app = FastAPI(
     description="Predict house prices using a versioned trained ML model.",
     version="1.0.0",
     lifespan=lifespan,
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://127.0.0.1:5173",
+        "http://localhost:5173",
+    ],
+    allow_credentials=False,
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["Accept", "Content-Type", "Authorization"],
 )
 
 app.include_router(health_router, prefix="/api/v1")

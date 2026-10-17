@@ -1,3 +1,4 @@
+
 export class ApiClientError extends Error {
     constructor(
         message: string,
@@ -18,74 +19,99 @@ export async function apiRequest<T>(
     path: string,
     options: RequestInit = {},
 ): Promise<T> {
+    const normalizedPath = path.startsWith("/")
+        ? path
+        : `/ ${path} `;
+
+    const url = `${API_BASE_URL}${normalizedPath} `;
+
+    console.groupCollapsed(`[API] ${options.method ?? "GET"} ${url} `);
+    console.log("Base URL:", API_BASE_URL);
+    console.log("Path:", path);
+    console.log("Request body:", options.body ?? "(none)");
+
     let response: Response;
 
     try {
-        response = await fetch(`${API_BASE_URL}${path}`, {
+        response = await fetch(url, {
             ...options,
             headers: {
                 Accept: "application/json",
-                ...(options.body ? { "Content-Type": "application/json" } : {}),
+                ...(options.body
+                    ? { "Content-Type": "application/json" }
+                    : {}),
                 ...options.headers,
             },
         });
-    } catch {
+    } catch (error) {
+        console.error("Fetch failed:", error);
+        console.error(
+            "Check backend availability, CORS, URL, and browser Network tab.",
+        );
+        console.groupEnd();
+
         throw new ApiClientError(
-            "Unable to reach the prediction server. Check your connection and try again.",
+            error instanceof Error
+                ? `Network request failed: ${error.message} `
+                : "Network request failed. Inspect the browser console.",
             null,
             "NETWORK_ERROR",
         );
     }
 
+    console.log("HTTP status:", response.status, response.statusText);
+    console.log("Response URL:", response.url);
+
+    const responseText = await response.text();
+    console.log("Raw response:", responseText);
+
     if (!response.ok) {
-        let message = `The request failed with status ${response.status}.`;
-        let code = "HTTP_ERROR";
+        console.error("HTTP request failed.");
+        console.groupEnd();
+
+        let message = `Request failed with status ${response.status}.`;
 
         try {
-            const body: unknown = await response.json();
+            const body = JSON.parse(responseText) as {
+                detail?: unknown;
+                error?: { message?: string; code?: string };
+            };
 
-            if (
-                typeof body === "object" &&
-                body !== null &&
-                "error" in body
-            ) {
-                const error = (body as {
-                    error?: { code?: string; message?: string };
-                }).error;
-
-                if (error?.message) message = error.message;
-                if (error?.code) code = error.code;
-            } else if (
-                typeof body === "object" &&
-                body !== null &&
-                "detail" in body
-            ) {
-                // FastAPI's default HTTPException response format.
-                const detail = (body as { detail?: unknown }).detail;
-
-                if (typeof detail === "string") {
-                    message = detail;
-                } else if (
-                    typeof detail === "object" &&
-                    detail !== null &&
-                    "message" in detail &&
-                    typeof detail.message === "string"
-                ) {
-                    message = detail.message;
-                }
+            if (typeof body.detail === "string") {
+                message = body.detail;
+            } else if (body.error?.message) {
+                message = body.error.message;
             }
-        } catch {
-            // Keep the safe fallback message when the error body isn't JSON.
+
+            throw new ApiClientError(
+                message,
+                response.status,
+                body.error?.code ?? "HTTP_ERROR",
+            );
+        } catch (error) {
+            if (error instanceof ApiClientError) {
+                throw error;
+            }
         }
 
-        throw new ApiClientError(message, response.status, code);
+        throw new ApiClientError(
+            message,
+            response.status,
+            "HTTP_ERROR",
+        );
     }
 
     try {
-        return (await response.json()) as T;
+        const result = JSON.parse(responseText) as T;
+        console.log("Parsed response:", result);
+        console.groupEnd();
+        return result;
     } catch {
+        console.error("Response is not valid JSON.");
+        console.groupEnd();
+
         throw new ApiClientError(
-            "The server returned an invalid response.",
+            "The server returned an invalid JSON response.",
             response.status,
             "INVALID_RESPONSE",
         );
